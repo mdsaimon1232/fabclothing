@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fab Clothing | Minimalist Luxury</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-serif { font-family: 'Playfair Display', serif; }
+        .scroll-mt-24 { scroll-margin-top: 6rem; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Smooth transitions for overlays */
+        .overlay-transition {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Product card hover effect */
+        .product-image-container:hover .quick-view {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-white text-zinc-900 selection:bg-stone-200 antialiased">
+
+    <!-- Navigation -->
+    <nav id="navbar" class="fixed top-0 left-0 w-full z-50 transition-all duration-500 py-6">
+        <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+            <button class="lg:hidden" onclick="toggleMobileMenu()">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+
+            <div class="text-2xl font-serif tracking-tighter cursor-pointer" onclick="navigateTo('home')">
+                FAB <span class="font-light italic">CLOTHING</span>
+            </div>
+
+            <div class="hidden lg:flex gap-10">
+                <button onclick="scrollToSection('products-section')" class="text-[11px] uppercase tracking-widest font-medium hover:text-stone-500 transition-colors">Collections</button>
+                <button onclick="filterByCategory('Women')" class="text-[11px] uppercase tracking-widest font-medium hover:text-stone-500 transition-colors">Women</button>
+                <button onclick="filterByCategory('Men')" class="text-[11px] uppercase tracking-widest font-medium hover:text-stone-500 transition-colors">Men</button>
+                <button onclick="scrollToSection('about-section')" class="text-[11px] uppercase tracking-widest font-medium hover:text-stone-500 transition-colors">About</button>
+            </div>
+
+            <div class="flex items-center gap-6">
+                <button onclick="toggleSearch()"><i data-lucide="search" class="w-5 h-5"></i></button>
+                <button onclick="toggleCart()" class="relative">
+                    <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                    <span id="cart-count" class="hidden absolute -top-2 -right-2 bg-stone-900 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="fixed inset-0 bg-white z-[60] translate-x-full transition-transform duration-500 lg:hidden">
+        <div class="p-6 flex justify-end">
+            <button onclick="toggleMobileMenu()"><i data-lucide="x" class="w-8 h-8"></i></button>
+        </div>
+        <div class="flex flex-col p-8 gap-8">
+            <button onclick="navigateTo('home'); toggleMobileMenu()" class="text-3xl font-serif text-left border-b border-zinc-100 pb-4">Home</button>
+            <button onclick="filterByCategory('Women'); toggleMobileMenu()" class="text-3xl font-serif text-left border-b border-zinc-100 pb-4">Women</button>
+            <button onclick="filterByCategory('Men'); toggleMobileMenu()" class="text-3xl font-serif text-left border-b border-zinc-100 pb-4">Men</button>
+            <button onclick="scrollToSection('about-section'); toggleMobileMenu()" class="text-3xl font-serif text-left border-b border-zinc-100 pb-4">About</button>
+        </div>
+    </div>
+
+    <!-- Main Content Container -->
+    <main id="app-root"></main>
+
+    <!-- Search Overlay -->
+    <div id="search-overlay" class="fixed inset-0 bg-white z-[100] opacity-0 pointer-events-none overlay-transition">
+        <div class="max-w-4xl mx-auto px-6 pt-32">
+            <div class="flex justify-between items-center mb-12">
+                <h2 class="text-xs uppercase tracking-[0.5em] font-bold">Search</h2>
+                <button onclick="toggleSearch()"><i data-lucide="x" class="w-8 h-8 font-light"></i></button>
+            </div>
+            <input type="text" placeholder="SEARCH THE COLLECTION..." class="w-full text-4xl lg:text-6xl font-serif outline-none border-b border-zinc-200 pb-8 placeholder:text-zinc-100 focus:border-zinc-900 transition-colors">
+        </div>
+    </div>
+
+    <!-- Cart Drawer -->
+    <div id="cart-backdrop" class="fixed inset-0 bg-black/40 z-[70] opacity-0 pointer-events-none transition-opacity duration-500" onclick="toggleCart()"></div>
+    <div id="cart-drawer" class="fixed top-0 right-0 h-full w-full max-w-md bg-white z-[80] shadow-2xl translate-x-full transition-transform duration-500 flex flex-col">
+        <div class="p-8 border-b border-zinc-100 flex justify-between items-center">
+            <h2 class="text-xl font-serif">Shopping Bag</h2>
+            <button onclick="toggleCart()"><i data-lucide="x" class="w-6 h-6"></i></button>
+        </div>
+        <div id="cart-items" class="flex-1 overflow-y-auto p-8 space-y-8">
+            <!-- Items injected via JS -->
+        </div>
+        <div id="cart-footer" class="p-8 border-t border-zinc-100 bg-zinc-50 hidden">
+            <div class="flex justify-between mb-4">
+                <span class="text-xs uppercase tracking-widest text-zinc-500 font-bold">Subtotal</span>
+                <span id="cart-total" class="text-lg font-serif">$0</span>
+            </div>
+            <button class="w-full bg-zinc-900 text-white py-5 text-xs uppercase tracking-widest font-bold hover:bg-zinc-800 transition-all">Checkout Now</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[110] -translate-y-12 opacity-0 pointer-events-none transition-all duration-500">
+        <div class="bg-white border border-zinc-100 shadow-xl px-6 py-3 flex items-center gap-3">
+            <i data-lucide="check-circle-2" class="text-green-500 w-4 h-4"></i>
+            <p id="toast-message" class="text-[11px] uppercase tracking-widest font-bold"></p>
+            <button onclick="toggleCart()" class="text-[11px] underline underline-offset-4 ml-4 font-bold">View Bag</button>
+        </div>
+    </div>
+
+    <!-- Footer Template -->
+    <footer id="main-footer" class="bg-zinc-900 text-white pt-24 pb-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-16 mb-24">
+                <div>
+                    <h4 class="text-2xl font-serif mb-8 tracking-tighter uppercase">FAB CLOTHING</h4>
+                    <p class="text-zinc-400 text-xs leading-relaxed mb-8">Premium minimalist apparel for the contemporary aesthetic. Sustainably crafted, timelessly designed.</p>
+                    <div class="flex gap-6">
+                        <i data-lucide="instagram" class="w-4 h-4 text-zinc-400 hover:text-white cursor-pointer"></i>
+                        <i data-lucide="twitter" class="w-4 h-4 text-zinc-400 hover:text-white cursor-pointer"></i>
+                        <i data-lucide="facebook" class="w-4 h-4 text-zinc-400 hover:text-white cursor-pointer"></i>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="text-[10px] uppercase tracking-[0.3em] font-bold mb-8 text-zinc-500">Shop</h5>
+                    <ul class="space-y-4 text-[11px] text-zinc-400 uppercase tracking-widest">
+                        <li><a href="#" class="hover:text-white">New Arrivals</a></li>
+                        <li><a href="#" class="hover:text-white">Women</a></li>
+                        <li><a href="#" class="hover:text-white">Men</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="text-[10px] uppercase tracking-[0.3em] font-bold mb-8 text-zinc-500">Support</h5>
+                    <ul class="space-y-4 text-[11px] text-zinc-400 uppercase tracking-widest">
+                        <li><a href="#" class="hover:text-white">Contact</a></li>
+                        <li><a href="#" class="hover:text-white">Shipping</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="text-[10px] uppercase tracking-[0.3em] font-bold mb-8 text-zinc-500">Updates</h5>
+                    <div class="flex border-b border-zinc-700 pb-2 mt-4">
+                        <input type="text" placeholder="EMAIL" class="bg-transparent text-[11px] w-full outline-none">
+                        <button class="text-[10px] font-bold uppercase tracking-widest">Join</button>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-12 border-t border-zinc-800 text-center">
+                <p class="text-[9px] uppercase tracking-[0.4em] text-zinc-500">© 2024 FAB CLOTHING • ALL RIGHTS RESERVED</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- Data ---
+        const PRODUCTS = [
+            { id: 1, name: "Classic Silk Trench", category: "Women", price: 280, image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=800", description: "Timeless weighted silk silhouette.", colors: ["#E5E5E5", "#1A1A1A"], sizes: ["XS", "S", "M", "L"], tag: "Trending" },
+            { id: 2, name: "Oversized Cashmere Knit", category: "Women", price: 195, image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=800", description: "Sustainable Mongolian cashmere.", colors: ["#F5F5DC", "#D2B48C"], sizes: ["S", "M", "L"], tag: "New Arrival" },
+            { id: 3, name: "Tailored Wool Blazer", category: "Men", price: 340, image: "https://images.unsplash.com/photo-1594932224010-75670779d997?q=80&w=800", description: "Italian wool, modern cut.", colors: ["#000000", "#2C3E50"], sizes: ["48", "50", "52"], tag: "Classic" },
+            { id: 4, name: "Essential Leather Boot", category: "Men", price: 210, image: "https://images.unsplash.com/photo-1520639889313-7272a74b1c73?q=80&w=800", description: "Handcrafted calfskin leather.", colors: ["#483C32", "#000000"], sizes: ["9", "10", "11"], tag: "Trending" },
+            { id: 5, name: "Minimalist Linen Shirt", category: "Men", price: 120, image: "https://images.unsplash.com/photo-1598033129183-c4f50c7176c8?q=80&w=800", description: "European breathable linen.", colors: ["#FFFFFF", "#708090"], sizes: ["M", "L", "XL"], tag: "Seasonal" },
+            { id: 6, name: "Architectural Drape Dress", category: "Women", price: 450, image: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?q=80&w=800", description: "Sculptural movement design.", colors: ["#000000", "#FFFAF0"], sizes: ["XS", "S", "M"], tag: "Limited" },
+            { id: 7, name: "Cropped Denim Jacket", category: "Women", price: 165, image: "https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=800", description: "Organic cotton denim.", colors: ["#87CEEB", "#FFFFFF"], sizes: ["S", "M", "L"], tag: "Classic" },
+            { id: 8, name: "Merino V-Neck Sweater", category: "Men", price: 145, image: "https://images.unsplash.com/photo-1614676466623-f1f9e9d3243f?q=80&w=800", description: "Fine merino year-round staple.", colors: ["#36454F", "#800000"], sizes: ["M", "L", "XL"], tag: "Best Seller" }
+        ];
+
+        // --- State ---
+        let cart = [];
+        let currentCategory = 'All';
+
+        // --- Core Functions ---
+        function init() {
+            lucide.createIcons();
+            renderHome();
+            
+            window.addEventListener('scroll', () => {
+                const nav = document.getElementById('navbar');
+                if (window.scrollY > 20) {
+                    nav.classList.add('bg-white', 'shadow-sm', 'py-4');
+                    nav.classList.remove('py-6');
+                } else {
+                    nav.classList.remove('bg-white', 'shadow-sm', 'py-4');
+                    nav.classList.add('py-6');
+                }
+            });
+        }
+
+        function navigateTo(view, productId = null) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (view === 'home') {
+                renderHome();
+            } else if (view === 'product') {
+                const product = PRODUCTS.find(p => p.id === productId);
+                renderProductDetail(product);
+            }
+        }
+
+        function renderHome() {
+            const root = document.getElementById('app-root');
+            root.innerHTML = `
+                <!-- Hero -->
+                <section class="relative h-screen flex items-center overflow-hidden">
+                    <div class="absolute inset-0">
+                        <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2000" class="w-full h-full object-cover grayscale-[0.3]" alt="Hero">
+                        <div class="absolute inset-0 bg-black/10"></div>
+                    </div>
+                    <div class="relative z-10 max-w-7xl mx-auto px-6 w-full text-white">
+                        <div class="max-w-2xl">
+                            <span class="block text-xs uppercase tracking-[0.5em] font-bold mb-6">SS 2024 Collection</span>
+                            <h1 class="text-6xl md:text-8xl font-serif mb-10 leading-[0.9] tracking-tighter">THE ART OF <br> <span class="italic font-light">ESSENTIALS</span></h1>
+                            <div class="flex gap-6 mt-12">
+                                <button onclick="filterByCategory('Women')" class="bg-white text-zinc-900 px-12 py-5 text-xs uppercase tracking-widest font-bold hover:bg-zinc-100 transition-all">Shop Women</button>
+                                <button onclick="filterByCategory('Men')" class="border border-white text-white px-12 py-5 text-xs uppercase tracking-widest font-bold hover:bg-white hover:text-zinc-900 transition-all">Shop Men</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Product Grid -->
+                <section id="products-section" class="py-24 bg-zinc-50/50 scroll-mt-24">
+                    <div class="max-w-7xl mx-auto px-6">
+                        <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+                            <div>
+                                <span class="text-[10px] uppercase tracking-[0.4em] font-bold text-zinc-400 mb-4 block underline underline-offset-8">Seasonal Edit</span>
+                                <h2 class="text-4xl font-serif">Curated Collections</h2>
+                            </div>
+                            <div class="flex gap-8 border-b border-zinc-200">
+                                ${['All', 'Women', 'Men'].map(cat => `
+                                    <button onclick="filterByCategory('${cat}')" class="pb-4 text-xs uppercase tracking-widest font-medium transition-all relative ${currentCategory === cat ? 'text-zinc-900' : 'text-zinc-400 hover:text-zinc-600'}">
+                                        ${cat} ${currentCategory === cat ? '<span class="absolute bottom-0 left-0 w-full h-0.5 bg-zinc-900"></span>' : ''}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div id="product-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-8">
+                            ${renderGridItems()}
+                        </div>
+                    </div>
+                </section>
+
+                <!-- About -->
+                <section id="about-section" class="py-32 bg-white">
+                    <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-24 items-center">
+                        <div class="aspect-[4/5] bg-zinc-100 overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=1200" alt="About" class="w-full h-full object-cover">
+                        </div>
+                        <div class="max-w-md">
+                            <span class="text-[10px] uppercase tracking-[0.4em] font-bold text-stone-500 mb-6 block">Our Craft</span>
+                            <h2 class="text-5xl font-serif mb-8 leading-tight">Elevated Staples for Modern Life</h2>
+                            <p class="text-zinc-500 mb-10 leading-relaxed text-sm">Founded in 2018, FAB CLOTHING is a commitment to quality over quantity. We source the world's finest materials to create a wardrobe that defies seasons.</p>
+                            <button class="text-xs uppercase tracking-widest font-bold border-b-2 border-zinc-900 pb-2">Read our Story</button>
+                        </div>
+                    </div>
+                </section>
+            `;
+            lucide.createIcons();
+        }
+
+        function renderGridItems() {
+            const filtered = currentCategory === 'All' ? PRODUCTS : PRODUCTS.filter(p => p.category === currentCategory);
+            return filtered.map(p => `
+                <div class="group cursor-pointer" onclick="navigateTo('product', ${p.id})">
+                    <div class="product-image-container relative aspect-[3/4] overflow-hidden bg-zinc-100 mb-4">
+                        <img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                        ${p.tag ? `<span class="absolute top-4 left-4 bg-white/90 px-3 py-1 text-[10px] uppercase tracking-widest font-semibold shadow-sm">${p.tag}</span>` : ''}
+                        <div class="quick-view absolute bottom-0 left-0 w-full p-4 translate-y-full transition-transform duration-500">
+                            <button class="w-full bg-zinc-900 text-white py-3 text-xs uppercase tracking-widest font-medium">View Details</button>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-[10px] uppercase tracking-[0.2em] text-zinc-400 mb-1">${p.category}</p>
+                            <h3 class="text-sm font-medium text-zinc-800">${p.name}</h3>
+                        </div>
+                        <p class="text-sm font-light text-zinc-600">$${p.price}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderProductDetail(p) {
+            const root = document.getElementById('app-root');
+            root.innerHTML = `
+                <div class="pt-32 pb-20 max-w-7xl mx-auto px-6">
+                    <button onclick="navigateTo('home')" class="flex items-center gap-2 text-xs uppercase tracking-widest font-medium mb-12 hover:text-stone-500 transition-colors group">
+                        <i data-lucide="arrow-left" class="w-4 h-4 transition-transform group-hover:-translate-x-1"></i>
+                        Back to collection
+                    </button>
+
+                    <div class="grid lg:grid-cols-2 gap-16 lg:gap-24">
+                        <div class="space-y-6">
+                            <div class="aspect-[4/5] bg-zinc-100 overflow-hidden">
+                                <img src="${p.image}" class="w-full h-full object-cover">
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col">
+                            <div class="border-b border-zinc-100 pb-8 mb-8">
+                                <p class="text-xs uppercase tracking-[0.3em] text-zinc-400 mb-3">${p.category}</p>
+                                <h1 class="text-4xl lg:text-5xl font-serif mb-4 leading-tight">${p.name}</h1>
+                                <p class="text-2xl font-light text-stone-800">$${p.price}</p>
+                            </div>
+                            <p class="text-zinc-500 leading-relaxed mb-10 text-sm lg:text-base">${p.description}</p>
+
+                            <div class="space-y-10 mb-12">
+                                <div>
+                                    <p class="text-[10px] uppercase tracking-widest font-bold mb-4">Color</p>
+                                    <div class="flex gap-4">
+                                        ${p.colors.map(color => `
+                                            <button class="w-8 h-8 rounded-full border border-zinc-100" style="background-color: ${color}"></button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] uppercase tracking-widest font-bold mb-4">Size</p>
+                                    <div class="flex flex-wrap gap-3">
+                                        ${p.sizes.map(size => `
+                                            <button class="min-w-[60px] py-3 px-4 border border-zinc-200 text-[11px] font-medium hover:border-zinc-900 transition-colors uppercase">${size}</button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button onclick="addToBag(${p.id})" class="bg-zinc-900 text-white py-5 text-xs uppercase tracking-widest font-bold hover:bg-zinc-800 transition-all active:scale-95">
+                                Add to Bag
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // --- Interaction Handlers ---
+        function filterByCategory(cat) {
+            currentCategory = cat;
+            renderHome();
+            scrollToSection('products-section');
+        }
+
+        function scrollToSection(id) {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function toggleCart() {
+            const drawer = document.getElementById('cart-drawer');
+            const backdrop = document.getElementById('cart-backdrop');
+            drawer.classList.toggle('translate-x-full');
+            backdrop.classList.toggle('opacity-0');
+            backdrop.classList.toggle('pointer-events-none');
+            renderCart();
+        }
+
+        function toggleSearch() {
+            const overlay = document.getElementById('search-overlay');
+            overlay.classList.toggle('opacity-0');
+            overlay.classList.toggle('pointer-events-none');
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('translate-x-full');
+        }
+
+        function addToBag(id) {
+            const p = PRODUCTS.find(item => item.id === id);
+            cart.push({ ...p, quantity: 1 });
+            updateCartCount();
+            showToast(`${p.name} added to bag`);
+        }
+
+        function updateCartCount() {
+            const countEl = document.getElementById('cart-count');
+            const count = cart.reduce((acc, item) => acc + item.quantity, 0);
+            if (count > 0) {
+                countEl.innerText = count;
+                countEl.classList.remove('hidden');
+            } else {
+                countEl.classList.add('hidden');
+            }
+        }
+
+        function renderCart() {
+            const itemsCont = document.getElementById('cart-items');
+            const footer = document.getElementById('cart-footer');
+            const totalEl = document.getElementById('cart-total');
+
+            if (cart.length === 0) {
+                itemsCont.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-zinc-400 gap-4 mt-20">
+                        <i data-lucide="shopping-bag" class="w-12 h-12 stroke-1"></i>
+                        <p class="text-sm tracking-widest uppercase">Your bag is empty</p>
+                    </div>
+                `;
+                footer.classList.add('hidden');
+            } else {
+                itemsCont.innerHTML = cart.map((item, idx) => `
+                    <div class="flex gap-6">
+                        <div class="w-24 aspect-[3/4] bg-zinc-100 flex-shrink-0">
+                            <img src="${item.image}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-sm font-medium">${item.name}</h3>
+                                <button onclick="removeFromCart(${idx})" class="text-zinc-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                            <p class="text-sm font-light">$${item.price}</p>
+                        </div>
+                    </div>
+                `).join('');
+                footer.classList.remove('hidden');
+                const total = cart.reduce((acc, item) => acc + item.price, 0);
+                totalEl.innerText = `$${total}`;
+            }
+            lucide.createIcons();
+        }
+
+        function removeFromCart(idx) {
+            cart.splice(idx, 1);
+            updateCartCount();
+            renderCart();
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.innerText = msg;
+            toast.classList.remove('-translate-y-12', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('-translate-y-12', 'opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // Initialize
+        window.onload = init;
+    </script>
+</body>
+</html>
